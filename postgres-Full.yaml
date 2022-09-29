@@ -10,9 +10,22 @@ data:
   POSTGRES_USER: kong
   POSTGRES_PASSWORD: kongpass
 ---
-# On GCP no need to create the PV (it's done automatically by the clain PVC - PersistentVolumeClaim)
-# kind: PersistentVolume
-# ...
+#kind: PersistentVolume
+#apiVersion: v1
+#metadata:
+#  name: postgres-pv-volume
+#  labels:
+#    type: local
+#    app: postgres
+#spec:
+#  storageClassName: manual
+#  capacity:
+#    storage: 5Gi
+#  accessModes:
+#    - ReadWriteMany
+#  hostPath:
+#    path: "/mnt/data"
+#---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
