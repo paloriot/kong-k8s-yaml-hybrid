@@ -32,9 +32,11 @@ Uncomment the PersistentVolume kind if you are not on GCP
 ```kubectl create -f kong-cp.yaml -n kong```
 
 5) Deploy Data Plane
-In case of Data Plane is not deployed on same namespace, uncomment the first part of yaml definition (which concerns `kind: Secret` and `kind: ServiceAccount`) and change the namespace
 ```kubectl create -f kong-dp.yaml -n kong```
+In case of Data Plane is not deployed on same namespace, uncomment the first part of yaml definition (which concerns `kind: Secret` and `kind: ServiceAccount`) and change the namespace
+
 
 ## Post installation
 Delete the job kong-migration-bootstrap which bootstrap the database
+
 ```kubectl delete pod kong-migration-<to-be-changed> -n kong```
