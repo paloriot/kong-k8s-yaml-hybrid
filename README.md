@@ -24,8 +24,9 @@ kubectl v1.19 or later
 ```kubectl create secret generic kong-enterprise-license --from-file=<absolute-path-to>/license -n kong```
 
 3) Create PostgreSQL
-Uncomment the PersistentVolume kind if you are not on GCP
+
 ```kubectl create -f postgres-Full.yaml -n kong```
+Uncomment the PersistentVolume kind if you are not on GCP
 
 4) Deploy Control Plane
 
