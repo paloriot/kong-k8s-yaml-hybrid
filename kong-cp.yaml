@@ -38,28 +38,6 @@ metadata:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
-  name: kong-proxy
-  namespace: kong
-spec:
-  ports:
-  - name: proxy
-    port: 80
-    protocol: TCP
-    targetPort: 8000
-  - name: proxy-ssl
-    port: 443
-    protocol: TCP
-    targetPort: 8443
-  selector:
-    app: kong-dp
-  type: LoadBalancer
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-    service.beta.kubernetes.io/aws-load-balancer-type: nlb
   name: kong-manager
   namespace: kong
 spec:
@@ -195,13 +173,13 @@ spec:
   # of retries before marking as failed.
   backoffLimit: 2
 ---
-#------------------------------------------------------------------------------
-# mTLS - Hybrid Mode
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------
+# mTLS - Hybrid Mode - Shared Mode: The certificate/key pair is shared by both CP and DP nodes
+#---------------------------------------------------------------------------------------------
 apiVersion: v1
 kind: Secret
 metadata:
-  name: secret-tls
+  name: secret-hybrid-cluster-tls
 type: kubernetes.io/tls
 data:
   # -------------------------
@@ -277,15 +255,15 @@ spec:
         - name: KONG_PORTAL_SESSION_CONF
           value: "{\"storage\":\"kong\",\"cookie_name\":\"portal_session\",\"secret\":\"super-secret\",\"cookie_secure\":false}"
         - name: KONG_PROXY_URL
-          value: http://kong-proxy.jerome.net
+          value: http://kong-proxy.client.net
         - name: KONG_ADMIN_API_URI
-          value: http://kong-admin.jerome.net
+          value: http://kong-admin.client.net
         - name: KONG_ADMIN_GUI_URL
-          value: http://kong-manager.jerome.net
+          value: http://kong-manager.client.net
         - name: KONG_PORTAL_GUI_HOST
-          value: kong-portal.jerome.net
+          value: kong-portal.client.net
         - name: KONG_PORTAL_API_URL
-          value: http://kong-portalapi.jerome.net
+          value: http://kong-portalapi.client.net
         - name: KONG_PORTAL_GUI_PROTOCOL 
           value: http
         - name: KONG_DATABASE
@@ -379,6 +357,5 @@ spec:
       volumes:
         - name: cluster-key
           secret:
-            secretName: secret-tls
+            secretName: secret-hybrid-cluster-tls
             optional: false # default setting; "secret-tls" must exist
----

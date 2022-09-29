@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: kong
+  labels:
+    app: postgres
+data:
+  POSTGRES_DB: kong
+  POSTGRES_USER: kong
+  POSTGRES_PASSWORD: kongpass
+---
+# On GCP no need to create the PV (it's done automatically by the clain PVC - PersistentVolumeClaim)
+# kind: PersistentVolume
+# ...
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pv-claim
+  namespace: kong
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard-rwo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres # Sets service name
+  namespace: kong
+  labels:
+    app: postgres # Labels and Selectors
+spec:
+  type: NodePort # Sets service type
+  ports:
+    - port: 5432 # Sets port to run the postgres application
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:9.6
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+          env:
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgredb
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim
