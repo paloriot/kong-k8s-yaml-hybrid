@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kong-dp
+  name: kong-dp
+  namespace: kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong-dp
+  template:
+    metadata:
+      annotations:
+        kuma.io/gateway: enabled
+        kuma.io/service-account-token-volume: kong-serviceaccount-token
+        traffic.sidecar.istio.io/includeInboundPorts: ""
+      labels:
+        app: kong-dp
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: KONG_LICENSE_DATA
+          valueFrom:
+            secretKeyRef:
+              key: license
+              name: kong-enterprise-license
+        - name: KONG_DATABASE
+          value: "off"
+        - name: KONG_ROLE
+          value: data_plane
+        - name: KONG_CLUSTER_CERT
+          value: /usr/local/kong/cluster_key/tls.crt
+        - name: KONG_CLUSTER_CERT_KEY
+          value: /usr/local/kong/cluster_key/tls.key
+        - name: KONG_CLUSTER_CONTROL_PLANE
+          value: kong-cluster-hybrid:8005
+        - name: KONG_CLUSTER_TELEMETRY_ENDPOINT
+          value: kong-cluster-hybrid:8006
+        - name: KONG_PROXY_LISTEN
+          value: 0.0.0.0:8000 reuseport backlog=16384, 0.0.0.0:8443 http2 ssl reuseport backlog=16384
+        - name: KONG_STATUS_LISTEN
+          value: 0.0.0.0:8100
+        - name: KONG_PROXY_URL
+          value: http://kong-proxy.jerome.net
+        - name: KONG_ADMIN_API_URI
+          value: http://kong-admin.jerome.net
+        - name: KONG_ADMIN_GUI_URL
+          value: http://kong-manager.jerome.net
+        - name: KONG_PORTAL_GUI_HOST
+          value: kong-portal.jerome.net
+        - name: KONG_PORTAL_API_URL
+          value: http://kong-portalapi.jerome.net
+        - name: KONG_PORTAL_GUI_PROTOCOL 
+          value: http
+        - name: KONG_NGINX_WORKER_PROCESSES
+          value: "2"
+        - name: KONG_PROXY_ERROR_LOG
+          value: /dev/stderr
+        - name: KONG_ROUTER_FLAVOR
+          value: traditional
+        image: kong/kong-gateway:3.0
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "1"
+          limits:
+            memory: "2048Mi"
+            cpu: "2"
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - kong quit
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /status
+            port: 8100
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /status
+            port: 8100
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: kong-dp
+        ports:
+        - containerPort: 8000
+          name: proxy
+          protocol: TCP
+        - containerPort: 8443
+          name: proxy-ssl
+          protocol: TCP
+        - containerPort: 8100
+          name: metrics
+          protocol: TCP
+        volumeMounts:
+        - name: cluster-key
+          mountPath: "/usr/local/kong/cluster_key"
+          readOnly: true
+      volumes:
+        - name: cluster-key
+          secret:
+            secretName: secret-tls
+            optional: false # default setting; "secret-tls" must exist
+

@@ -1,0 +1,384 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kong-serviceaccount
+  namespace: kong
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kong-leader-election
+  namespace: kong
+rules:
+- apiGroups:
+  - ""
+  - coordination.k8s.io
+  resources:
+  - configmaps
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: kong-proxy
+  namespace: kong
+spec:
+  ports:
+  - name: proxy
+    port: 80
+    protocol: TCP
+    targetPort: 8000
+  - name: proxy-ssl
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: kong-dp
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: kong-manager
+  namespace: kong
+spec:
+  ports:
+  - name: manager
+    port: 80
+    protocol: TCP
+    targetPort: 8002
+  - name: manager-ssl
+    port: 443
+    protocol: TCP
+    targetPort: 8445
+  selector:
+    app: kong-cp
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: kong-admin
+  namespace: kong
+spec:
+  ports:
+  - name: admin
+    port: 80
+    protocol: TCP
+    targetPort: 8001
+  - name: admin-ssl
+    port: 443
+    protocol: TCP
+    targetPort: 8444
+  selector:
+    app: kong-cp
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: kong-devportal
+  namespace: kong
+spec:
+  ports:
+  - name: portal
+    port: 80
+    protocol: TCP
+    targetPort: 8003
+  - name: portal-ssl
+    port: 443
+    protocol: TCP
+    targetPort: 8446
+  selector:
+    app: kong-cp
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: kong-devportal-api
+  namespace: kong
+spec:
+  ports:
+  - name: portal-api
+    port: 80
+    protocol: TCP
+    targetPort: 8004
+  - name: portal-api-ssl
+    port: 443
+    protocol: TCP
+    targetPort: 8447
+  selector:
+    app: kong-cp
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: kong-cluster-hybrid
+  namespace: kong
+spec:
+  ports:
+  - name: cluster
+    port: 8005
+    protocol: TCP
+    targetPort: 8005
+  - name: cluster-telemetry
+    port: 8006
+    protocol: TCP
+    targetPort: 8006
+  selector:
+    app: kong-cp
+  type: NodePort
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kong-migration-bootstrap
+  namespace: kong
+spec:
+  template:
+    metadata:
+      name: kong-migration-bootstrap
+    spec:
+      containers:
+      - env:
+        - name: KONG_DATABASE
+          value: "postgres"
+        - name: KONG_PG_HOST
+          value: "postgres"
+        - name: KONG_PG_USER
+          value: "kong"
+        - name: KONG_PG_PASSWORD
+          value: "kongpass"
+        - name: KONG_PASSWORD
+          value: "kong"
+        name: kong-migration
+        image: kong/kong-gateway:3.0.0.0-alpine
+        command: ["kong"]
+        args: ["migrations", "bootstrap"]
+      # Do not restart containers after they exit
+      restartPolicy: Never
+  # of retries before marking as failed.
+  backoffLimit: 2
+---
+#------------------------------------------------------------------------------
+# mTLS - Hybrid Mode
+#------------------------------------------------------------------------------
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-tls
+type: kubernetes.io/tls
+data:
+  # -------------------------
+  # How to have this content?
+  # -------------------------
+  # First generate the cluster.crt and cluster.key by using 'kong hybrid gen_cert'
+  # Dump the result in this yaml file:
+  #   cat cluster.crt | base64
+  #   cat cluster.key | base64
+  tls.crt: |
+    LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJXRENCM3dJQkFEQUtCZ2dxaGtqT1BRUURBakFhTVJnd0ZnWURWUVFEREE5cmIyNW5YMk5zZFhOMFpYSnAKYm1jd0hoY05Nakl3T1RJd01UVXdNREExV2hjTk1qVXdPVEU1TVRVd01EQTFXakFhTVJnd0ZnWURWUVFEREE5cgpiMjVuWDJOc2RYTjBaWEpwYm1jd2RqQVFCZ2NxaGtqT1BRSUJCZ1VyZ1FRQUlnTmlBQVJTdFJXVmgvbHNnRFdsCmRUMWdQdXZUMVJLRURQRFJJcW1rS2VEc1RaSDlyTTNQYWpITERObUp1czBtY2FtWXY4K3NGQm1hOEd1bHBYa2EKSVl0Slo1azZyek82L3pkZGJoeVhtTU5qVjhkeGRwZ0drOUxIK1lFQnJYSis4T3p6S25vd0NnWUlLb1pJemowRQpBd0lEYUFBd1pRSXhBTHNvU2FWTnBHd3lEZjFER0I0N1A0WVJiVUhOZFVSYzFTQVNQVCs5Y3pzRUVyZm9rR1p1Cm8vSEJXYkQ5SFpteWhRSXdYOGNqSzRWTDc0WTRYeVdFM25VQ0lsQTQ3eXNKSUJqTld4aFF5TktGR25ubXN5M0sKSFVjMTlnOFVXeTBROG01KwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+  tls.key: |
+    LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JRzJBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFpQklHZU1JR2JBZ0VCQkRDY0tnbEtnekZ1R3Bqa0pQbk4KWEhyWU5zOFNlSHQrb3RySmVoUnEyNHV0cTVDZjN2L3BQOHRZK2ttZU1GU2krL1NoWkFOaUFBUlN0UldWaC9scwpnRFdsZFQxZ1B1dlQxUktFRFBEUklxbWtLZURzVFpIOXJNM1BhakhMRE5tSnVzMG1jYW1Zdjgrc0ZCbWE4R3VsCnBYa2FJWXRKWjVrNnJ6TzYvemRkYmh5WG1NTmpWOGR4ZHBnR2s5TEgrWUVCclhKKzhPenpLbm89Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
+---
+#------------------------------------------------------------------------------
+# POD: Kong Control Plane
+#------------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kong-cp
+  name: kong-cp
+  namespace: kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong-cp
+  template:
+    metadata:
+      annotations:
+        kuma.io/gateway: enabled
+        kuma.io/service-account-token-volume: kong-serviceaccount-token
+        traffic.sidecar.istio.io/includeInboundPorts: ""
+      labels:
+        app: kong-cp
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: KONG_LICENSE_DATA
+          valueFrom:
+            secretKeyRef:
+              key: license
+              name: kong-enterprise-license
+        - name: KONG_ROLE
+          value: control_plane
+        - name: KONG_CLUSTER_CERT
+          value: /usr/local/kong/cluster_key/tls.crt
+        - name: KONG_CLUSTER_CERT_KEY
+          value: /usr/local/kong/cluster_key/tls.key
+        - name: KONG_PROXY_LISTEN
+          value: "off"
+        - name: KONG_STATUS_LISTEN
+          value: 0.0.0.0:8100
+        - name: KONG_ADMIN_LISTEN
+          value: 0.0.0.0:8001 reuseport backlog=16384, 0.0.0.0:8444 http2 ssl reuseport backlog=16384
+        - name: KONG_PORTAL
+          value: "on"
+        - name: KONG_ADMIN_GUI_AUTH
+          value: "basic-auth"
+        - name: KONG_ADMIN_GUI_AUTH_CONF
+          value: "{ \"hide_credentials\": true }"
+        - name: KONG_ADMIN_GUI_SESSION_CONF
+          value: "{\"cookie_name\":\"admin_session\",\"cookie_samesite\":\"off\",\"secret\":\"kong-manager\",\"cookie_secure\":false,\"storage\":\"kong\"}"
+        - name: KONG_ENFORCE_RBAC
+          value: "both"
+        - name: KONG_PASSWORD
+          value: "kong"
+        - name: KONG_PORTAL_AUTH
+          value: "basic-auth"
+        - name: KONG_PORTAL_SESSION_CONF
+          value: "{\"storage\":\"kong\",\"cookie_name\":\"portal_session\",\"secret\":\"super-secret\",\"cookie_secure\":false}"
+        - name: KONG_PROXY_URL
+          value: http://kong-proxy.jerome.net
+        - name: KONG_ADMIN_API_URI
+          value: http://kong-admin.jerome.net
+        - name: KONG_ADMIN_GUI_URL
+          value: http://kong-manager.jerome.net
+        - name: KONG_PORTAL_GUI_HOST
+          value: kong-portal.jerome.net
+        - name: KONG_PORTAL_API_URL
+          value: http://kong-portalapi.jerome.net
+        - name: KONG_PORTAL_GUI_PROTOCOL 
+          value: http
+        - name: KONG_DATABASE
+          value: "postgres"
+        - name: KONG_PG_HOST
+          value: "postgres"
+        - name: KONG_PG_USER
+          value: "kong"
+        - name: KONG_PG_PASSWORD
+          value: "kongpass"
+        - name: KONG_NGINX_WORKER_PROCESSES
+          value: "2"
+        - name: KONG_ADMIN_ACCESS_LOG
+          value: /dev/stdout
+        - name: KONG_ADMIN_ERROR_LOG
+          value: /dev/stderr
+        image: kong/kong-gateway:3.0
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2048Mi"
+            cpu: "1"
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - kong quit
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /status
+            port: 8100
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /status
+            port: 8100
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: kong-cp
+        ports:
+        - containerPort: 8001
+          name: admin
+          protocol: TCP
+        - containerPort: 8002
+          name: manager
+          protocol: TCP
+        - containerPort: 8003
+          name: devportal
+          protocol: TCP
+        - containerPort: 8004
+          name: portalapi
+          protocol: TCP
+        - containerPort: 8005
+          name: cluster
+          protocol: TCP
+        - containerPort: 8006
+          name: telemetry
+          protocol: TCP
+        - containerPort: 8444
+          name: admin-ssl
+          protocol: TCP
+        - containerPort: 8445
+          name: manager-ssl
+          protocol: TCP
+        - containerPort: 8446
+          name: devportal-ssl
+          protocol: TCP
+        - containerPort: 8447
+          name: portalapi-ssl
+          protocol: TCP
+        - containerPort: 8100
+          name: metrics
+          protocol: TCP
+        volumeMounts:
+        - name: cluster-key
+          mountPath: "/usr/local/kong/cluster_key"
+          readOnly: true
+      volumes:
+        - name: cluster-key
+          secret:
+            secretName: secret-tls
+            optional: false # default setting; "secret-tls" must exist
+---
