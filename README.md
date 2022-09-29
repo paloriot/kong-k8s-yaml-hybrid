@@ -70,3 +70,9 @@ The expected result is:
 Delete the job ```kong-migration-bootstrap``` which bootstraps the database
 
 ```kubectl delete pod kong-migration-<to-be-changed> -n kong```
+
+
+## How to uninstall Kong
+Remove the kong namespace
+
+```kubectl delete namespace kong```
