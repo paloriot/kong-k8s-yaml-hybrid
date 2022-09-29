@@ -123,9 +123,9 @@ spec:
         - name: KONG_ADMIN_GUI_URL
           value: http://kong-manager.client.net
         - name: KONG_PORTAL_GUI_HOST
-          value: kong-portal.client.net
+          value: kong-devportal.client.net
         - name: KONG_PORTAL_API_URL
-          value: http://kong-portalapi.client.net
+          value: http://kong-portal-api.client.net
         - name: KONG_PORTAL_GUI_PROTOCOL 
           value: http
         - name: KONG_NGINX_WORKER_PROCESSES
