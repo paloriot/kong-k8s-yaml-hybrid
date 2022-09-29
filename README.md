@@ -32,7 +32,9 @@ Uncomment the PersistentVolume kind if you are not on GCP
 ```kubectl create -f kong-cp.yaml -n kong```
 
 5) Deploy Data Plane
+
 ```kubectl create -f kong-dp.yaml -n kong```
+
 In case of Data Plane is not deployed on same namespace, uncomment the first part of yaml definition (which concerns `kind: Secret` and `kind: ServiceAccount`) and change the namespace
 
 
