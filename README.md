@@ -26,6 +26,7 @@ kubectl v1.19 or later
 3) Create PostgreSQL
 
 ```kubectl create -f postgres-Full.yaml -n kong```
+
 Uncomment the PersistentVolume kind if you are not on GCP
 
 4) Deploy Control Plane
@@ -38,8 +39,34 @@ Uncomment the PersistentVolume kind if you are not on GCP
 
 In case of Data Plane is not deployed on same namespace, uncomment the first part of yaml definition (which concerns `kind: Secret` and `kind: ServiceAccount`) and change the namespace
 
+## How to check Kong is correctly installed
+1) Check the pods
+
+```kubectl get pods -n kong```
+
+The expected result is:
+| NAME | READY | STATUS | RESTARTS |
+|---|---|---|---|
+|kong-cp   |1/1   |Running   | 0  |
+|kong-dp   |1/1   |Running   | 0  |
+|kong-migration-bootstrap   | 0/1 |Completed   | 0  |
+|postgres   |1/1  |Running   | 0  |
+
+2) Check the services
+```kubectl get services -n kong```
+
+| NAME | TYPE | CLUSTER-IP | EXTERNAL-IP | PORT(S) |
+|---|---|---|---|---|
+| kong-admin | LoadBalancer | IP-1 | IP-a |80:port-1/TCP,443:port-2/TCP |
+| kong-cluster-hybrid | NodePort | IP-2  |none | 8005:port-3/TCP,8006:port-4/TCP |
+| kong-devportal | LoadBalancer |IP-3 | IP-b|80:port-5/TCP,443:port-6/TCP |
+| kong-devportal-api | LoadBalancer |IP-4 | IP-c| 80:port-7/TCP,443:port-8/TCP|
+| kong-manager | LoadBalancer |IP-5 |IP-d |80:port-9/TCP,443:port-10/TCP |
+| kong-proxy | LoadBalancer |IP-6 |IP-e | 80:port-11/TCP,443:port-12/TCP |
+| kong-proxy-status | LoadBalancer |IP-7 |IP-f |80:port-13/TCP  |
+| postgres | NodePort |IP-8 | none|5432:port-14/TCP |
 
 ## Post installation
-Delete the job kong-migration-bootstrap which bootstrap the database
+Delete the job ```kong-migration-bootstrap``` which bootstraps the database
 
 ```kubectl delete pod kong-migration-<to-be-changed> -n kong```
