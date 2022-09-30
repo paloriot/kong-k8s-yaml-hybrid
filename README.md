@@ -14,7 +14,7 @@ https://docs.konghq.com/gateway/latest/production/deployment-topologies/hybrid-m
 ## Prerequisites
 - A Kubernetes cluster, v1.19 or later
 kubectl v1.19 or later
-- (Enterprise only) A license.json file from Kong
+- A license.json file from Kong
 
 ## How to install Kong in hybrid mode
 1) Create namespace
