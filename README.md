@@ -171,7 +171,7 @@ HTTP/1.1 200 OK
 Delete the job ```kong-migration-bootstrap``` which bootstraps the database
 
 ```
-kubectl delete pod kong-migration-<to-be-changed> -n kong
+kubectl delete pod kong-migration-bootstrap-<to-be-changed> -n kong
 ```
 
 ## How to uninstall Kong
