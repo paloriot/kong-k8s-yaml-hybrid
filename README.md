@@ -47,7 +47,7 @@ openssl req -new -x509 -nodes -newkey ec:<(openssl ecparam -name secp384r1) \
   -days 1095 -subj "/CN=kong_clustering"
 ```
 
-6) Create secret with MTLS certificate
+6) Create secret with mTLS certificate
 ```
 kubectl create secret tls secret-hybrid-cluster-tls --cert=/tmp/cluster.crt --key=/tmp/cluster.key -n kong
 ````
@@ -146,6 +146,26 @@ Test the Upstream Service through Kong gateway
 ```
 curl -X GET http://kong-proxy.client.net/mock/requests
 ```
+The expected result is
+```
+HTTP/1.1 200 OK
+...
+{
+  "startedDateTime": "2022-09-30T16:04:20.368Z",
+  "clientIPAddress": "10.132.0.35",
+  "method": "GET",
+  "url": "http://kong-proxy.client.net/requests",
+  "httpVersion": "HTTP/1.1",
+  "cookies": {},
+  "headers": {
+    "host": "mockbin.org",
+  ...
+  ...
+  "headersSize": 600,
+  "bodySize": 0
+}
+```
+
 
 ## Post installation
 Delete the job ```kong-migration-bootstrap``` which bootstraps the database
