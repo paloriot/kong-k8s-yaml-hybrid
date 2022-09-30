@@ -3,7 +3,7 @@
 ## Information
 This repo helps you to install Kong Enterprise in hybrid mode with `kubectl apply` (without Helm). The basic authentication is enabled on Kong Manager and Kong Developer Portal.
 
-Tested in Google GCP.
+Tested with Google GCP. It should work with other Public Cloud Providers and on-premises Kubernetes.
 
 In this example:
 - The Control Plane (CP) and Data Plane (DP) are deployed in the same namespace (called kong). Feel free to change the namespace of CP and DP.
