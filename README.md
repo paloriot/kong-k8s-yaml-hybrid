@@ -17,47 +17,47 @@ kubectl v1.19 or later
 - A license.json file from Kong
 
 ## How to install Kong in hybrid mode
-1) Create namespace
+1. Create namespace
 ```
 kubectl create namespace kong
 ```
 
-2) Create license secret
+2. Create license secret
 ```
 kubectl create secret generic kong-enterprise-license --from-file=license -n kong
 ```
 
-3) Create PostgreSQL
+3. Create PostgreSQL
 ```
 kubectl create -f postgres-Full.yaml -n kong
 ```
 
 Uncomment the ```PersistentVolume kind``` if you are not on GCP
 
-4) Prepare and bootstrap PostgreSQL
+4. Prepare and bootstrap PostgreSQL
 ```
 kubectl create -f postgres-bootstrap.yaml -n kong
 ```
 
 
-5) Create mutual TLS Certificate for Control Plane - Data Plane
+5. Create mutual TLS Certificate for Control Plane - Data Plane
 ```
 openssl req -new -x509 -nodes -newkey ec:<(openssl ecparam -name secp384r1) \
   -keyout /tmp/cluster.key -out /tmp/cluster.crt \
   -days 1095 -subj "/CN=kong_clustering"
 ```
 
-6) Create secret with mTLS certificate
+6. Create secret with mTLS certificate
 ```
 kubectl create secret tls secret-hybrid-cluster-tls --cert=/tmp/cluster.crt --key=/tmp/cluster.key -n kong
 ````
 
-7) Deploy Control Plane
+7. Deploy Control Plane
 ```
 kubectl create -f kong-cp.yaml -n kong
 ```
 
-8) Deploy Data Plane
+8. Deploy Data Plane
 ```
 kubectl create -f kong-dp.yaml -n kong
 ```
@@ -68,7 +68,7 @@ In case of Data Plane is not deployed on same namespace :
 - Create secret with mTLS certificate in the new namespace (step #6)
 
 ## Check Kong pods and services are correctly installed
-1) Check the pods
+1. Check the pods
 ```
 kubectl get pods -n kong
 ```
@@ -81,7 +81,7 @@ The expected result is:
 |kong-migration-bootstrap   | 0/1 |Completed   | 0  |
 |postgres   |1/1  |Running   | 0  |
 
-2) Check the services
+2. Check the services
 The expected result is:
 ```
 kubectl get services -n kong
