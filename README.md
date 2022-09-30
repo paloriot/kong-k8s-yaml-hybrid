@@ -82,6 +82,7 @@ The expected result is:
 |postgres   |1/1  |Running   | 0  |
 
 2) Check the services
+The expected result is:
 ```
 kubectl get services -n kong
 ```
@@ -146,7 +147,7 @@ Test the Upstream Service through Kong gateway
 ```
 curl -X GET http://kong-proxy.client.net/mock/requests
 ```
-The expected result is
+The expected result is:
 ```
 HTTP/1.1 200 OK
 ...
