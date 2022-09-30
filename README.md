@@ -105,7 +105,7 @@ The Kong's URLs are
 |Manager|http://kong-manager.client.net|https://kong-manager.client.net
 |Admin API|http://kong-admin.client.net|https://kong-admin.client.net|
 |DevPortal|http://kong-devportal.client.net|https://kong-devportal.client.net|
-|DevPortal API|http://kong-portal-api.client.net|https://kong-portal-api.client.net|
+|DevPortal API|http://kong-devportal-api.client.net|https://kong-portal-api.client.net|
 |Proxy Gateway|http://kong-proxy.client.net|https://kong-proxy.client.net|
 
 ## How to access the Kong Manager
