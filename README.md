@@ -17,19 +17,25 @@ kubectl v1.19 or later
 ## How to install Kong in hybrid mode
 1) Create namespace
 
-```kubectl create namespace kong```
+```
+kubectl create namespace kong
+```
 
 2) Create license secret
 
-```kubectl create secret generic kong-enterprise-license --from-file=license -n kong```
+```
+kubectl create secret generic kong-enterprise-license --from-file=license -n kong
+```
 
 3) Create PostgreSQL
 
-```kubectl create -f postgres-Full.yaml -n kong```
+```
+kubectl create -f postgres-Full.yaml -n kong
+```
 
 Uncomment the ```PersistentVolume kind``` if you are not on GCP
 
-4) Create MTLS Certificate for Control Plane - Data Plane
+4) Create mutual TLS Certificate for Control Plane - Data Plane
 
 ```
 openssl req -new -x509 -nodes -newkey ec:<(openssl ecparam -name secp384r1) \
@@ -42,22 +48,29 @@ Create secret with MTLS certificate
 kubectl create secret tls secret-hybrid-cluster-tls --cert=/tmp/cluster.crt --key=/tmp/cluster.key -n kong
 ````
 
-4) Deploy Control Plane
+5) Deploy Control Plane
 
 ```
 kubectl create -f kong-cp.yaml -n kong
 ```
 
-5) Deploy Data Plane
+6) Deploy Data Plane
 
-```kubectl create -f kong-dp.yaml -n kong```
+```
+kubectl create -f kong-dp.yaml -n kong
+```
 
-In case of Data Plane is not deployed on same namespace, uncomment the first part of yaml definition (which concerns `kind: Secret` and `kind: ServiceAccount`) and change the namespace
+In case of Data Plane is not deployed on same namespace :
+- Uncomment the first part of yaml definition (which concerns ```kind: ServiceAccount```)
+- Create secret with mTLS certificate
+- Change the namespace
 
 ## How to check Kong is correctly installed
 1) Check the pods
 
-```kubectl get pods -n kong```
+```
+kubectl get pods -n kong
+```
 
 The expected result is:
 | NAME | READY | STATUS | RESTARTS |
@@ -68,7 +81,9 @@ The expected result is:
 |postgres   |1/1  |Running   | 0  |
 
 2) Check the services
-```kubectl get services -n kong```
+```
+kubectl get services -n kong
+```
 
 | NAME | TYPE | CLUSTER-IP | EXTERNAL-IP | PORT(S) |
 |---|---|---|---|---|
@@ -106,14 +121,42 @@ Open a browser and go to http://kong-devportal.client.net
 
 ![Developer Portal](./images/Kong_DevPortal.png)
 
+## Test Kong with an upstream service
+
+The service used is ```http://mockbin.org```
+
+Create Service
+```
+curl -i -s -X POST http://kong-admin.client.net/services \
+  --data name=example_service \
+  --data url='http://mockbin.org'\
+  --header 'Kong-Admin-Token: kong'
+  ```
+
+Create Route
+```
+curl -i -X POST http://kong-admin.client.net/services/example_service/routes \
+  --data 'paths[]=/mock' \
+  --data name=example_route \
+  --header 'Kong-Admin-Token: kong'
+```
+
+Test the Kong Service
+```
+curl -X GET http://kong-proxy.client.net/mock/requests
+```
 
 ## Post installation
 Delete the job ```kong-migration-bootstrap``` which bootstraps the database
 
-```kubectl delete pod kong-migration-<to-be-changed> -n kong```
+```
+kubectl delete pod kong-migration-<to-be-changed> -n kong
+```
 
 
 ## How to uninstall Kong
 Remove the kong namespace
 
-```kubectl delete namespace kong```
+```
+kubectl delete namespace kong
+```
