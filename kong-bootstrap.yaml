@@ -1,0 +1,35 @@
+#------------------------------------------------------------------------------
+# Prepare and bootstrap PostgreSQL
+#------------------------------------------------------------------------------
+---
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: kong-migration-bootstrap
+      namespace: kong
+    spec:
+      template:
+        metadata:
+          name: kong-migration-bootstrap
+        spec:
+          containers:
+          - env:
+            - name: KONG_DATABASE
+              value: "postgres"
+            - name: KONG_PG_HOST
+              value: "postgres"
+            - name: KONG_PG_USER
+              value: "kong"
+            - name: KONG_PG_PASSWORD
+              value: "kongpass"
+            - name: KONG_PASSWORD
+              value: "kong"
+            name: kong-migration
+            image: kong/kong-gateway:3.0.0.0-alpine
+            command: ["kong"]
+            args: ["migrations", "bootstrap"]
+          # Do not restart containers after they exit
+          restartPolicy: Never
+      # of retries before marking as failed.
+      backoffLimit: 3
+    

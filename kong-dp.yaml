@@ -1,7 +1,6 @@
 #---------------------------------------------------------------------------------------------------------
 # !!! Uncomment this section in case of Data Plane is not deployed in same ns or cluster of Control Plane
-#
-#---
+#---------------------------------------------------------------------------------------------------------
 #apiVersion: v1
 #kind: ServiceAccount
 #metadata:
@@ -31,7 +30,7 @@ spec:
   type: LoadBalancer
 ---
 #------------------------------------------------------------------------------
-# POD: Kong Data Plane
+# Deployment: Kong Data Plane
 #------------------------------------------------------------------------------
 apiVersion: v1
 kind: Service

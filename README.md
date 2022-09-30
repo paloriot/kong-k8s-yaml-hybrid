@@ -1,7 +1,9 @@
 # Install Kong Enterprise in Hybrid mode with kubectl apply
 
 ## Information
-This repo helps you to install Kong Enterprise in hybrid mode with `kubectl apply` (without Helm).
+This repo helps you to install Kong Enterprise in hybrid mode with `kubectl apply` (without Helm). The basic authentication is enabled on Kong Manager and Kong Developer Portal.
+
+Tested in Google GCP.
 
 In this example:
 - The Control Plane (CP) and Data Plane (DP) are deployed in the same namespace (called kong). Feel free to change the namespace of CP and DP.
@@ -16,58 +18,57 @@ kubectl v1.19 or later
 
 ## How to install Kong in hybrid mode
 1) Create namespace
-
 ```
 kubectl create namespace kong
 ```
 
 2) Create license secret
-
 ```
 kubectl create secret generic kong-enterprise-license --from-file=license -n kong
 ```
 
 3) Create PostgreSQL
-
 ```
 kubectl create -f postgres-Full.yaml -n kong
 ```
 
 Uncomment the ```PersistentVolume kind``` if you are not on GCP
 
-4) Create mutual TLS Certificate for Control Plane - Data Plane
+4) Prepare and bootstrap PostgreSQL
+```
+kubectl create -f postgres-bootstrap.yaml -n kong
+```
 
+
+5) Create mutual TLS Certificate for Control Plane - Data Plane
 ```
 openssl req -new -x509 -nodes -newkey ec:<(openssl ecparam -name secp384r1) \
   -keyout /tmp/cluster.key -out /tmp/cluster.crt \
   -days 1095 -subj "/CN=kong_clustering"
 ```
 
-Create secret with MTLS certificate
+6) Create secret with MTLS certificate
 ```
 kubectl create secret tls secret-hybrid-cluster-tls --cert=/tmp/cluster.crt --key=/tmp/cluster.key -n kong
 ````
 
-5) Deploy Control Plane
-
+7) Deploy Control Plane
 ```
 kubectl create -f kong-cp.yaml -n kong
 ```
 
-6) Deploy Data Plane
-
+8) Deploy Data Plane
 ```
 kubectl create -f kong-dp.yaml -n kong
 ```
 
 In case of Data Plane is not deployed on same namespace :
-- Uncomment the first part of yaml definition (which concerns ```kind: ServiceAccount```)
-- Create secret with mTLS certificate
-- Change the namespace
+- Change the namespace in ```kong-dp.yaml```
+- Uncomment the first part of ```kong-dp.yaml``` (which concerns ```kind: ServiceAccount```)
+- Create secret with mTLS certificate in the new namespace (step #6)
 
 ## Check Kong pods and services are correctly installed
 1) Check the pods
-
 ```
 kubectl get pods -n kong
 ```
