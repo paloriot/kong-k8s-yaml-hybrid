@@ -21,17 +21,32 @@ kubectl v1.19 or later
 
 2) Create license secret
 
-```kubectl create secret generic kong-enterprise-license --from-file=<absolute-path-to>/license -n kong```
+```kubectl create secret generic kong-enterprise-license --from-file=license -n kong```
 
 3) Create PostgreSQL
 
 ```kubectl create -f postgres-Full.yaml -n kong```
 
-Uncomment the PersistentVolume kind if you are not on GCP
+Uncomment the ```PersistentVolume kind``` if you are not on GCP
+
+4) Create MTLS Certificate for Control Plane - Data Plane
+
+```
+openssl req -new -x509 -nodes -newkey ec:<(openssl ecparam -name secp384r1) \
+  -keyout /tmp/cluster.key -out /tmp/cluster.crt \
+  -days 1095 -subj "/CN=kong_clustering"
+```
+
+Create secret with MTLS certificate
+```
+kubectl create secret tls secret-hybrid-cluster-tls --cert=/tmp/cluster.crt --key=/tmp/cluster.key -n kong
+````
 
 4) Deploy Control Plane
 
-```kubectl create -f kong-cp.yaml -n kong```
+```
+kubectl create -f kong-cp.yaml -n kong
+```
 
 5) Deploy Data Plane
 
@@ -65,6 +80,32 @@ The expected result is:
 | kong-proxy | LoadBalancer |IP-6 |IP-e | 80:port-11/TCP,443:port-12/TCP |
 | kong-proxy-status | LoadBalancer |IP-7 |IP-f |80:port-13/TCP  |
 | postgres | NodePort |IP-8 | none|5432:port-14/TCP |
+
+## What are the Kong's URLs
+The Kong's URLs are
+|Kong Module|HTTP URL|HTTPS URL|
+|---|---|---|
+|Manager|http://kong-manager.client.net|https://kong-manager.client.net
+|Admin API|http://kong-admin.client.net|https://kong-admin.client.net|
+|DevPortal|http://kong-devportal.client.net|https://kong-devportal.client.net|
+|DevPortal API|http://kong-portal-api.client.net|https://kong-portal-api.client.net|
+|Proxy Gateway|http://kong-proxy.client.net|https://kong-proxy.client.net|
+
+## How to access the Kong Manager
+Open a browser and go to http://kong-manager.client.net
+
+The username is '''kong_admin''' and the default password is '''kong'''
+![Kong Manager Login](./images/Kong_Manager_login.png)
+
+## How to access the Kong Developer Portal
+First, enable the DevPortal by going to Kong Manager, DevPortal / Overview and by clicking on Enable Devportal Portal
+
+![Enable Kong Developer Portal](./images/Kong_Enable_DevPortal.png)
+
+Open a browser and go to http://kong-devportal.client.net
+
+![Developer Portal](./images/Kong_DevPortal.png)
+
 
 ## Post installation
 Delete the job ```kong-migration-bootstrap``` which bootstraps the database
