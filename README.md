@@ -65,7 +65,7 @@ In case of Data Plane is not deployed on same namespace :
 - Create secret with mTLS certificate
 - Change the namespace
 
-## How to check Kong is correctly installed
+## Check Kong pods and services are correctly installed
 1) Check the pods
 
 ```
@@ -109,7 +109,7 @@ The Kong's URLs are
 ## How to access the Kong Manager
 Open a browser and go to http://kong-manager.client.net
 
-The username is '''kong_admin''' and the default password is '''kong'''
+The username is ```kong_admin```and the default password is ```kong```
 ![Kong Manager Login](./images/Kong_Manager_login.png)
 
 ## How to access the Kong Developer Portal
@@ -141,7 +141,7 @@ curl -i -X POST http://kong-admin.client.net/services/example_service/routes \
   --header 'Kong-Admin-Token: kong'
 ```
 
-Test the Kong Service
+Test the Upstream Service through Kong gateway
 ```
 curl -X GET http://kong-proxy.client.net/mock/requests
 ```
