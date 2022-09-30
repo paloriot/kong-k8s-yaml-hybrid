@@ -113,7 +113,7 @@ The username is ```kong_admin```and the default password is ```kong```
 ![Kong Manager Login](./images/Kong_Manager_login.png)
 
 ## How to access the Kong Developer Portal
-First, enable the DevPortal by going to Kong Manager, DevPortal / Overview and by clicking on Enable Devportal Portal
+First, enable the DevPortal by going to Kong Manager, DevPortal / Overview and by clicking on Enable Developer Portal
 
 ![Enable Kong Developer Portal](./images/Kong_Enable_DevPortal.png)
 
