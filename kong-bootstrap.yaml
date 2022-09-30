@@ -31,5 +31,5 @@
           # Do not restart containers after they exit
           restartPolicy: Never
       # of retries before marking as failed.
-      backoffLimit: 3
+      backoffLimit: 10
     
