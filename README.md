@@ -111,7 +111,7 @@ The Kong's URLs are
 ## How to access the Kong Manager
 Open a browser and go to http://kong-manager.client.net
 
-The username is ```kong_admin```and the default password is ```kong```
+The username is ```kong_admin``` and the default password is ```kong```
 ![Kong Manager Login](./images/Kong_Manager_login.png)
 
 ## How to access the Kong Developer Portal
@@ -123,9 +123,9 @@ Open a browser and go to http://kong-devportal.client.net
 
 ![Developer Portal](./images/Kong_DevPortal.png)
 
-## Test Kong with an upstream service
+## Test Kong with an Upstream service
 
-The service used is ```http://mockbin.org```
+The Upstream service used is ```http://mockbin.org```
 
 Create Service
 ```
@@ -167,14 +167,12 @@ HTTP/1.1 200 OK
 }
 ```
 
-
 ## Post installation
 Delete the job ```kong-migration-bootstrap``` which bootstraps the database
 
 ```
 kubectl delete pod kong-migration-<to-be-changed> -n kong
 ```
-
 
 ## How to uninstall Kong
 Remove the kong namespace
