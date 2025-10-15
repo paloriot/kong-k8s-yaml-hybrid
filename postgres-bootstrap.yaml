@@ -25,7 +25,7 @@
             - name: KONG_PASSWORD
               value: "kong"
             name: kong-migration
-            image: kong/kong-gateway:3.0.0.0-alpine
+            image: kong/kong-gateway:latest
             command: ["kong"]
             args: ["migrations", "bootstrap"]
           # Do not restart containers after they exit
