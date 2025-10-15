@@ -196,15 +196,15 @@ spec:
         - name: KONG_PORTAL_SESSION_CONF
           value: "{\"storage\":\"kong\",\"cookie_name\":\"portal_session\",\"cookie_samesite\":\"off\",\"cookie_domain\":\".client.net\",\"cookie_samesite\":\"off\",\"secret\":\"super-secret\",\"cookie_secure\":false}"
         - name: KONG_PROXY_URL
-          value: http://kong-proxy.client.net
+          value: http://kong-proxy.bpce.pt
         - name: KONG_ADMIN_API_URI
-          value: http://kong-admin.client.net
+          value: http://kong-admin.bpce.pt
         - name: KONG_ADMIN_GUI_URL
-          value: http://kong-manager.client.net
+          value: http://kong-manager.bpce.pt
         - name: KONG_PORTAL_GUI_HOST
-          value: kong-devportal.client.net
+          value: kong-devportal.bpce.pt
         - name: KONG_PORTAL_API_URL
-          value: http://kong-devportal-api.client.net
+          value: http://kong-devportal-api.bpce.pt
         - name: KONG_PORTAL_GUI_PROTOCOL 
           value: http
         - name: KONG_DATABASE
@@ -219,7 +219,7 @@ spec:
           value: /dev/stdout
         - name: KONG_ADMIN_ERROR_LOG
           value: /dev/stderr
-        image: kong/kong-gateway:3.0.0.0-alpine
+        image: kong/kong-gateway:latest
         lifecycle:
           preStop:
             exec:
